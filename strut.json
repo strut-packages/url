@@ -1,7 +1,7 @@
 {
   "name": "url",
   "version": "0.1.0",
-  "entry": "url.h",
+  "entry": "src/url.h",
   "description": "RFC 3986 URI-reference parsing and resolution for Strut.",
   "license": "MIT",
   "repository": "https://github.com/strut-packages/url",

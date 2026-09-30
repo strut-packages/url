@@ -7,16 +7,16 @@ This package implements generic RFC 3986 semantics. It does not claim WHATWG URL
 ## API
 
 ```strut
-function url_parse(string text) -> Url : UrlError;
-function url_stringify(Url value) -> string;
-function url_resolve(Url base, string reference) -> Url : UrlError;
-function url_resolve_string(string base, string reference) -> string : UrlError;
-function url_percent_encode(bytes input) -> string;
-function url_percent_decode(string text) -> bytes : UrlError;
-function url_encode(string text) -> string;
-function url_decode(string text) -> string : UrlError;
-function url_parse_query(string query) -> UrlQueryParam[] : UrlError;
-function url_build_query(UrlQueryParam[] parameters) -> string;
+value := url.parse(text);
+text := url.stringify(value);
+resolved := url.resolve(value, reference);
+text := url.resolve_string(base, reference);
+encoded := url.percent_encode(input_bytes);
+decoded := url.percent_decode(text);
+encoded := url.encode(text);
+decoded := url.decode(text);
+parameters := url.parse_query(query);
+query := url.build_query(parameters);
 ```
 
 ## Usage
@@ -25,9 +25,9 @@ function url_build_query(UrlQueryParam[] parameters) -> string;
 include <url>;
 
 function main() -> int : UrlError {
-    Url base := url_parse("https://example.com/a/b?q=1#top");
-    print(url_stringify(url_resolve(base, "../other")));
-    print(url_encode("a b"));
+    Url base := url.parse("https://example.com/a/b?q=1#top");
+    print(url.stringify(url.resolve(base, "../other")));
+    print(url.encode("a b"));
     return 0;
 }
 ```

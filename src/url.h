@@ -113,7 +113,7 @@ function url_internal_validate_port(bytes input) -> void : UrlError {
     return;
 }
 
-function url_parse(string text) -> Url : UrlError {
+function url_internal_parse(string text) -> Url : UrlError {
     bytes input := bytes.from_string(text);
     int_64 length := input.length();
     int_64 main_end := length;
@@ -266,7 +266,7 @@ function url_parse(string text) -> Url : UrlError {
     };
 }
 
-function url_stringify(Url value) -> string {
+function url_internal_stringify(Url value) -> string {
     result := "";
     if (value.scheme != null) {
         result = result + (value.scheme ?? "") + ":";
@@ -373,11 +373,11 @@ string? fragment
     return result;
 }
 
-function url_resolve(Url base, string reference) -> Url : UrlError {
+function url_internal_resolve(Url base, string reference) -> Url : UrlError {
     if (base.scheme == null) {
         throw UrlError { message: "base URI must have a scheme", code: 6 };
     }
-    Url relative := url_parse(reference);
+    Url relative := url_internal_parse(reference);
     string? target_scheme := base.scheme;
     string? target_authority := null;
     string target_path := "";
@@ -412,7 +412,7 @@ function url_resolve(Url base, string reference) -> Url : UrlError {
         }
     }
 
-    return url_parse(url_internal_compose(
+    return url_internal_parse(url_internal_compose(
     target_scheme,
     target_authority,
     target_path,
@@ -421,11 +421,11 @@ function url_resolve(Url base, string reference) -> Url : UrlError {
     ));
 }
 
-function url_resolve_string(string base, string reference) -> string : UrlError {
-    return url_stringify(url_resolve(url_parse(base), reference));
+function url_internal_resolve_string(string base, string reference) -> string : UrlError {
+    return url_internal_stringify(url_internal_resolve(url_internal_parse(base), reference));
 }
 
-function url_percent_encode(bytes input) -> string {
+function url_internal_percent_encode(bytes input) -> string {
     bytes hex := bytes.from_string("0123456789ABCDEF");
     bytes output := bytes(input.length() * 3);
     int_64 used := 0;
@@ -455,7 +455,7 @@ function url_internal_hex_value(uint_8 value) -> uint_8 {
     return value;
 }
 
-function url_percent_decode(string text) -> bytes : UrlError {
+function url_internal_percent_decode(string text) -> bytes : UrlError {
     bytes input := bytes.from_string(text);
     bytes output := bytes(input.length());
     int_64 used := 0;
@@ -480,15 +480,15 @@ function url_percent_decode(string text) -> bytes : UrlError {
     return output.slice(0, used);
 }
 
-function url_encode(string text) -> string {
-    return url_percent_encode(bytes.from_string(text));
+function url_internal_encode(string text) -> string {
+    return url_internal_percent_encode(bytes.from_string(text));
 }
 
-function url_decode(string text) -> string : UrlError {
-    return url_percent_decode(text).to_string();
+function url_internal_decode(string text) -> string : UrlError {
+    return url_internal_percent_decode(text).to_string();
 }
 
-function url_parse_query(string query) -> UrlQueryParam[] : UrlError {
+function url_internal_parse_query(string query) -> UrlQueryParam[] : UrlError {
     bytes input := bytes.from_string(query);
     UrlQueryParam[] parameters := [];
     if (input.empty()) {
@@ -510,10 +510,10 @@ function url_parse_query(string query) -> UrlQueryParam[] : UrlError {
         string name := "";
         string? value := null;
         if (equals >= 0) {
-            name = url_decode(url_internal_slice(input, begin, equals));
-            value = url_decode(url_internal_slice(input, equals + 1, end));
+            name = url_internal_decode(url_internal_slice(input, begin, equals));
+            value = url_internal_decode(url_internal_slice(input, equals + 1, end));
         } else {
-            name = url_decode(url_internal_slice(input, begin, end));
+            name = url_internal_decode(url_internal_slice(input, begin, end));
         }
         parameters.push(UrlQueryParam { name: name, value: value });
         if (end == input.length()) {
@@ -524,18 +524,50 @@ function url_parse_query(string query) -> UrlQueryParam[] : UrlError {
     return parameters;
 }
 
-function url_build_query(UrlQueryParam[] parameters) -> string {
+function url_internal_build_query(UrlQueryParam[] parameters) -> string {
     result := "";
     bool first := true;
     for (parameter : parameters) {
         if (!first) {
             result = result + "&";
         }
-        result = result + url_encode(parameter.name);
+        result = result + url_internal_encode(parameter.name);
         if (parameter.value != null) {
-            result = result + "=" + url_encode(parameter.value ?? "");
+            result = result + "=" + url_internal_encode(parameter.value ?? "");
         }
         first = false;
     }
     return result;
 }
+
+struct UrlFacade {
+    function parse(string text) -> Url : UrlError;
+    function stringify(Url value) -> string;
+    function resolve(Url base, string reference) -> Url : UrlError;
+    function resolve_string(string base, string reference) -> string : UrlError;
+    function percent_encode(bytes input) -> string;
+    function percent_decode(string text) -> bytes : UrlError;
+    function encode(string text) -> string;
+    function decode(string text) -> string : UrlError;
+    function parse_query(string query) -> UrlQueryParam[] : UrlError;
+    function build_query(UrlQueryParam[] parameters) -> string;
+}
+
+function UrlFacade::parse(string text) -> Url : UrlError { return url_internal_parse(text); }
+function UrlFacade::stringify(Url value) -> string { return url_internal_stringify(value); }
+function UrlFacade::resolve(Url base, string reference) -> Url : UrlError {
+    return url_internal_resolve(base, reference);
+}
+function UrlFacade::resolve_string(string base, string reference) -> string : UrlError {
+    return url_internal_resolve_string(base, reference);
+}
+function UrlFacade::percent_encode(bytes input) -> string { return url_internal_percent_encode(input); }
+function UrlFacade::percent_decode(string text) -> bytes : UrlError { return url_internal_percent_decode(text); }
+function UrlFacade::encode(string text) -> string { return url_internal_encode(text); }
+function UrlFacade::decode(string text) -> string : UrlError { return url_internal_decode(text); }
+function UrlFacade::parse_query(string query) -> UrlQueryParam[] : UrlError { return url_internal_parse_query(query); }
+function UrlFacade::build_query(UrlQueryParam[] parameters) -> string { return url_internal_build_query(parameters); }
+
+function url_internal_facade() -> UrlFacade { return UrlFacade {}; }
+
+UrlFacade url := url_internal_facade();
