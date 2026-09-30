@@ -7,16 +7,16 @@ This package implements generic RFC 3986 semantics. It does not claim WHATWG URL
 ## API
 
 ```strut
-Url url_parse(string text) : UrlError;
-string url_stringify(Url value);
-Url url_resolve(Url base, string reference) : UrlError;
-string url_resolve_string(string base, string reference) : UrlError;
-string url_percent_encode(bytes input);
-bytes url_percent_decode(string text) : UrlError;
-string url_encode(string text);
-string url_decode(string text) : UrlError;
-UrlQueryParam[] url_parse_query(string query) : UrlError;
-string url_build_query(UrlQueryParam[] parameters);
+function url_parse(string text) -> Url : UrlError;
+function url_stringify(Url value) -> string;
+function url_resolve(Url base, string reference) -> Url : UrlError;
+function url_resolve_string(string base, string reference) -> string : UrlError;
+function url_percent_encode(bytes input) -> string;
+function url_percent_decode(string text) -> bytes : UrlError;
+function url_encode(string text) -> string;
+function url_decode(string text) -> string : UrlError;
+function url_parse_query(string query) -> UrlQueryParam[] : UrlError;
+function url_build_query(UrlQueryParam[] parameters) -> string;
 ```
 
 ## Usage
